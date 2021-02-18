@@ -1,0 +1,15 @@
+{
+    "dependencies": {
+        "charenc": "^0.0.2",
+        "crypt": "^0.0.2",
+        "express": "^4.16.4",
+        "multer": "^1.4.2",
+        "request": "^2.88.2",
+        "require_optional": "^1.0.1",
+        "resolve-from": "^5.0.0"
+    },
+    "devDependencies": {
+        "babel-preset-env": "^1.7.0",
+        "babel-register": "^6.26.0"
+    }
+}

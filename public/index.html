@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件名批量修改工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding: 40px;
+        }
+
+        table {
+            text-align: center;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+        }
+
+        aside {
+            flex: 1;
+            margin-left: 50px;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="text" id="js-file-path" placeholder="请输入文件夹地址" />
+    <button id="js-check-file">查询文件</button>
+    <br>
+    <br>
+    <input type="text" id="js-file-name" placeholder="输入文件名自动添加序号" />
+    <button id="js-change-name">批量修改</button>
+
+    <main>
+        <table border>
+            <thead>
+                <th>源文件名</th>
+                <th>修改</th>
+            </thead>
+            <tbody class="tbody">
+            </tbody>
+        </table>
+        <aside>
+            <h3>操作记录</h3>
+            <ul class="history">
+                <li></li>
+            </ul>
+        </aside>
+    </main>
+
+    <script src="/jq.js"></script>
+    <script>
+
+        // 文件列表
+        let fileList = [];
+
+        // 文件地址
+        let fileUrl = '';
+
+        // 查询文件
+        $('#js-check-file').on('click', () => {
+             fileUrl = $('#js-file-path').val();
+            if (!fileUrl) {
+                alert('文件夹地址不能为空');
+                return
+            }
+            getListByPath();
+            setHistory(`查询 ${fileUrl} 目录下文件`);
+        });
+
+        // 更改文件
+        $('#js-change-name').on('click', () => {
+
+            const fileName = $('#js-file-name').val();
+
+            if (!fileName) {
+                return alert('文件名不能为空');
+            }
+
+            $.ajax({
+                url: '/changeFile',
+                type: 'post',
+                data: {
+                    url: fileUrl,
+                    fileName
+                },
+                success: res => {
+                    alert('更改成功');
+                    getListByPath(fileUrl);
+                    setHistory(`批量修改文件名`);
+                },
+                error: err => {
+                    console.log(err);
+                }
+            });
+        });
+
+        // 单一文件修改事件监听
+        $('.tbody').on('click', 'button', e => {
+            const index = e.currentTarget.dataset.index;
+            const fileName = $(e.currentTarget).parent().children('input').val();
+
+            if (!fileName) {
+                alert('文件名不能为空')
+                return
+            }
+
+            $.ajax({
+                url: '/changeFile',
+                type: 'post',
+                data: {
+                    url: fileUrl,
+                    fileName,
+                    originName: fileList[index]
+                },
+                success: res => {
+                    alert('更改成功');
+                    getListByPath(fileUrl);
+                    setHistory(`修改文件 ${fileList[index]} 为 ${fileName}`);
+                },
+                error: err => {
+                    console.log(err);
+                }
+            });
+        });
+
+        function getListByPath(path = '') {
+            $.ajax({
+                url: '/checkFile',
+                data: {
+                    url: path || $('#js-file-path').val() || '/file/'
+                },
+                success: res => {
+                    fileList = res.fileList;
+
+                    let html = '';
+                    fileList.forEach((fileName, fileIndex) => {
+                        html += `<tr>
+                                <td>${fileName}</td>
+                                <td>
+                                    <input placeholder="请输入文件名" />
+                                    <button data-index="${fileIndex}">修改</button>
+                                </td>
+                            </tr>`;
+                    });
+
+                    $('.tbody').html(html);
+                },
+                error: err => {
+                    alert(err);
+                }
+            });
+        }
+
+        // 设置历史记录
+        function setHistory(str) {
+            let html = $('.history').html();
+            html += `<li>${str}<li>`
+            $('.history').html(html);
+        }
+    </script>
+</body>
+
+</html>
